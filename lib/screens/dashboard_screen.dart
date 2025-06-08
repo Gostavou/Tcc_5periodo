@@ -188,6 +188,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _buildDrawerItem(context, Icons.flag, 'Metas', '/goals'),
                   _buildDrawerItem(context, Icons.currency_exchange, 'Cotações',
                       '/currency'),
+                  _buildDrawerItem(context, Icons.calculate,
+                      'Calculadora de Juros', '/interest_calculator'),
                   _buildDrawerItem(
                       context, Icons.history, 'Histórico', '/history'),
                   _buildDrawerItem(

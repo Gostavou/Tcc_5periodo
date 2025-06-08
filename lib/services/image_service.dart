@@ -1,12 +1,9 @@
-// lib/services/image_service.dart
-
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 import 'dart:io';
 import 'dart:async';
 
-// Para Web
 import 'dart:html' as html;
 
 class ImageService {
@@ -24,8 +21,6 @@ class ImageService {
 
       return completer.future;
     } else {
-      // No mobile, usar image_picker (instale e importe)
-      // Aqui só exemplo, você pode implementar direto no seu widget
       return null;
     }
   }

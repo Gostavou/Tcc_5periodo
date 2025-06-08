@@ -55,13 +55,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              spreadRadius: 2,
-            )
-          ],
         ),
         child: Column(
           children: [
@@ -81,7 +74,10 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 backgroundColor: Colors.white,
                 backgroundImage: userProvider.photoUrl.isNotEmpty
                     ? NetworkImage(userProvider.photoUrl)
-                    : const AssetImage('assets/profile.png') as ImageProvider,
+                    : null,
+                child: userProvider.photoUrl.isEmpty
+                    ? const Icon(Icons.person, size: 40, color: Colors.blue)
+                    : null,
               ),
             ),
             Expanded(
@@ -92,6 +88,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                   _buildDrawerItem(context, Icons.flag, 'Metas', '/goals'),
                   _buildDrawerItem(context, Icons.currency_exchange, 'Cotações',
                       '/currency'),
+                  _buildDrawerItem(context, Icons.calculate,
+                      'Calculadora de Juros', '/interest_calculator'),
                   _buildDrawerItem(
                       context, Icons.history, 'Histórico', '/history'),
                   _buildDrawerItem(

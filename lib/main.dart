@@ -23,12 +23,12 @@ import 'package:projeto_financeiro/services/database_service.dart';
 import 'package:projeto_financeiro/models/goal_model.dart';
 import 'firebase_options.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:projeto_financeiro/screens/interest_calculator_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Inicializa os dados de localização para datas
     await initializeDateFormatting('pt_BR', null);
 
     await Firebase.initializeApp(
@@ -124,7 +124,6 @@ class MyApp extends StatelessWidget {
             ),
           ),
           themeMode: themeProvider.themeMode,
-          // Verifica se usuário está logado para definir home
           home: authProvider.currentUser == null
               ? const LoginScreen()
               : const DashboardScreen(),
@@ -144,6 +143,8 @@ class MyApp extends StatelessWidget {
               final goal = ModalRoute.of(context)!.settings.arguments as Goal;
               return GoalDetailScreen(goal: goal);
             },
+            '/interest_calculator': (context) =>
+                const InterestCalculatorScreen(), // Nova rota adicionada
           },
         );
       },
