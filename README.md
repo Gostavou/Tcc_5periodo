@@ -14,6 +14,16 @@ Aplicativo de controle financeiro pessoal desenvolvido como Trabalho de Conclus�
 - 📈 Cotações de moedas em tempo real
 - ☁️ Sincronização com Firebase Firestore
 
+## ⚙️ Em desenvolvimento
+
+Algumas funcionalidades ainda estão em fase de testes/ajustes:
+
+- 🔧 Correção de erros no carregamento e exibição de **imagens de perfil**  
+- 🔄 Finalização do **login com Google**  
+- 💵 Implementação da **adição de saldo inicial** pelo próprio usuário (atualmente fixado em R\$ 5.000 fictícios)
+- 🚫 Correção do problema onde, ao **deslogar e logar com outro usuário**, os dados anteriores ainda aparecem (será implementada limpeza automática dos dados locais no logout)
+
+
 ## 🛠 Tecnologias Utilizadas
 
 ### Frontend
