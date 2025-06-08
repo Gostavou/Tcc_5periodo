@@ -1,18 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_financeiro/services/database_service.dart';
+import 'package:projeto_financeiro/models/user_model.dart';
 
 class UserProvider with ChangeNotifier {
-  String _name = 'Usuário';
-  String _email = '';
-  String _photoUrl = '';
+  DatabaseService _databaseService;
+  UserData? _userData;
+  String _localPhotoPath = '';
 
-  String get name => _name;
-  String get email => _email;
-  String get photoUrl => _photoUrl;
+  UserProvider({required DatabaseService databaseService})
+      : _databaseService = databaseService;
 
-  void updateProfile(String name, String email, String photoUrl) {
-    _name = name;
-    _email = email;
-    _photoUrl = photoUrl;
+  String get name => _userData?.name ?? 'Usuário';
+  String get email => _userData?.email ?? '';
+  String get photoUrl => _userData?.photoUrl ?? '';
+  String get localPhotoPath => _localPhotoPath;
+
+  void updateDatabaseService(DatabaseService databaseService) {
+    _databaseService = databaseService;
+    loadUserData();
+  }
+
+  Future<void> loadUserData() async {
+    try {
+      _userData = await _databaseService.getUserData();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Erro ao carregar dados do usuário: $e');
+      _userData = UserData(
+        name: 'Usuário',
+        email: '',
+        photoUrl: '',
+        lastLogin: DateTime.now(),
+      );
+      notifyListeners();
+    }
+  }
+
+  Future<void> ensureUserDataLoaded() async {
+    if (_userData == null) {
+      await loadUserData();
+    }
+  }
+
+  Future<void> updateProfile(String name, String email, String photoUrl,
+      {String localPhotoPath = ''}) async {
+    try {
+      _userData = UserData(
+        name: name,
+        email: email,
+        photoUrl: photoUrl,
+        lastLogin: DateTime.now(),
+      );
+      if (localPhotoPath.isNotEmpty) {
+        _localPhotoPath = localPhotoPath;
+      }
+
+      await _databaseService.saveUserData(
+        name: name,
+        email: email,
+        photoUrl: photoUrl,
+      );
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Erro ao atualizar perfil: $e');
+      rethrow;
+    }
+  }
+
+  void setLocalPhotoPath(String path) {
+    _localPhotoPath = path;
+    notifyListeners();
+  }
+
+  // Aqui pra limpar os dados do usuario quando desloga, porque ta dando um erro que toda vez que loga tem que recarregar a pagina pra aparecer
+  void clearUser() {
+    _userData = null;
+    _localPhotoPath = '';
     notifyListeners();
   }
 }

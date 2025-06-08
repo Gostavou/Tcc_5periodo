@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:projeto_financeiro/providers/user_provider.dart';
 import 'package:projeto_financeiro/providers/currency_provider.dart';
-import 'package:projeto_financeiro/providers/theme_provider.dart'; // Novo provider
+import 'package:projeto_financeiro/providers/theme_provider.dart';
 import 'dart:io';
 
 class SettingsScreen extends StatefulWidget {
@@ -33,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final currencyProvider = Provider.of<CurrencyProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context); // Novo provider
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -42,7 +42,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Seção de Perfil
           Card(
             elevation: 4,
             child: Padding(
@@ -119,10 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Seção de Preferências
           Card(
             elevation: 4,
             child: Padding(
@@ -156,9 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: const Text('Idioma'),
                     subtitle: const Text('Português (Brasil)'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navegar para tela de seleção de idioma
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
@@ -204,10 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Seção de Notificações
           Card(
             elevation: 4,
             child: Padding(
@@ -247,10 +238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Seção de Segurança
           Card(
             elevation: 4,
             child: Padding(
@@ -278,27 +266,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     leading: const Icon(Icons.lock),
                     title: const Text('Alterar Senha'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navegar para tela de alteração de senha
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.security),
                     title: const Text('Privacidade'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navegar para tela de privacidade
-                    },
+                    onTap: () {},
                   ),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Seção de Suporte
           Card(
             elevation: 4,
             child: Padding(
@@ -315,45 +296,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     leading: const Icon(Icons.help),
                     title: const Text('Ajuda e FAQ'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navegar para tela de ajuda
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.report),
                     title: const Text('Reportar Problema'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navegar para tela de reportar problema
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.star),
                     title: const Text('Avaliar Aplicativo'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Abrir loja para avaliação
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.share),
                     title: const Text('Compartilhar App'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Compartilhar link do app
-                    },
+                    onTap: () {},
                   ),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Seção de Sobre
           Card(
             elevation: 4,
             child: Padding(
@@ -376,40 +346,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     leading: const Icon(Icons.update),
                     title: const Text('Atualizações'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Verificar atualizações
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.description),
                     title: const Text('Termos de Uso'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Abrir termos de uso
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.privacy_tip),
                     title: const Text('Política de Privacidade'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Abrir política de privacidade
-                    },
+                    onTap: () {},
                   ),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Botão de Sair
           ElevatedButton(
-            onPressed: () {
-              // Lógica para sair do app
-            },
+            onPressed: () {},
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               minimumSize: const Size(double.infinity, 50),

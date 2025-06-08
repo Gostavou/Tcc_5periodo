@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:projeto_financeiro/models/goal_model.dart';
+import 'package:projeto_financeiro/providers/goal_provider.dart';
+import 'dart:io';
 
 class GoalContribution {
   final String id;
@@ -45,7 +50,6 @@ class Goal {
       includedInCharts: includeInCharts,
     ));
 
-    // Verifica se a meta foi concluída
     if (currentAmount >= targetAmount) {
       isCompleted = true;
     }
@@ -57,7 +61,6 @@ class Goal {
     currentAmount -= contribution.amount;
     contributions.removeWhere((c) => c.id == contributionId);
 
-    // Se estava concluída e agora não está mais
     if (isCompleted && currentAmount < targetAmount) {
       isCompleted = false;
     }
@@ -82,12 +85,7 @@ class GoalProvider with ChangeNotifier {
 
     goal.addContribution(amount, includeInCharts);
 
-    // Se a meta foi concluída agora
-    if (goal.isCompleted && !wasCompletedBefore) {
-      notifyListeners();
-    } else {
-      notifyListeners();
-    }
+    notifyListeners();
   }
 
   void removeContribution(String goalId, String contributionId) {
@@ -106,6 +104,12 @@ class GoalProvider with ChangeNotifier {
 
   void removeGoal(String goalId) {
     _goals.removeWhere((g) => g.id == goalId);
+    notifyListeners();
+  }
+
+  void clearData() {
+    _goals.clear();
+    _completedGoals.clear();
     notifyListeners();
   }
 }

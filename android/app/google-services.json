@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "238748889820",
+    "project_id": "tcc5periodo",
+    "storage_bucket": "tcc5periodo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:238748889820:android:341789dc87e8c27a487a19",
+        "android_client_info": {
+          "package_name": "com.example.projeto_financeiro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1Ac9QwM5IKzep2Y78671v6GaE_0kGe2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:238748889820:android:a4ae7ada758730e2487a19",
+        "android_client_info": {
+          "package_name": "com.tcc.projeto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1Ac9QwM5IKzep2Y78671v6GaE_0kGe2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

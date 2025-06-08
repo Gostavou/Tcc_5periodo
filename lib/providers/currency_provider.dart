@@ -16,7 +16,6 @@ class CurrencyProvider with ChangeNotifier {
   String _errorMessage = '';
   String get errorMessage => _errorMessage;
 
-  // Moedas suportadas com bandeiras e nomes de países
   final List<Map<String, dynamic>> _supportedCurrencies = [
     {'code': 'USD', 'name': 'Dólar Americano', 'flag': '🇺🇸', 'symbol': '\$'},
     {'code': 'EUR', 'name': 'Euro', 'flag': '🇪🇺', 'symbol': '€'},
@@ -56,49 +55,7 @@ class CurrencyProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['result'] == 'success') {
-          final usdRates = data['conversion_rates'];
-          final brlRate = usdRates['BRL'];
-
-          _exchangeRates = {
-            'USD': {'rate': 1 / brlRate, 'converted': 10 / brlRate},
-            'EUR': {
-              'rate': usdRates['EUR'] / brlRate,
-              'converted': 10 * usdRates['EUR'] / brlRate
-            },
-            'GBP': {
-              'rate': usdRates['GBP'] / brlRate,
-              'converted': 10 * usdRates['GBP'] / brlRate
-            },
-            'JPY': {
-              'rate': usdRates['JPY'] / brlRate,
-              'converted': 10 * usdRates['JPY'] / brlRate
-            },
-            'CAD': {
-              'rate': usdRates['CAD'] / brlRate,
-              'converted': 10 * usdRates['CAD'] / brlRate
-            },
-            'AUD': {
-              'rate': usdRates['AUD'] / brlRate,
-              'converted': 10 * usdRates['AUD'] / brlRate
-            },
-            'CHF': {
-              'rate': usdRates['CHF'] / brlRate,
-              'converted': 10 * usdRates['CHF'] / brlRate
-            },
-            'CNY': {
-              'rate': usdRates['CNY'] / brlRate,
-              'converted': 10 * usdRates['CNY'] / brlRate
-            },
-            'ARS': {
-              'rate': usdRates['ARS'] / brlRate,
-              'converted': 10 * usdRates['ARS'] / brlRate
-            },
-            'MXN': {
-              'rate': usdRates['MXN'] / brlRate,
-              'converted': 10 * usdRates['MXN'] / brlRate
-            },
-            'BRL': {'rate': 1.0, 'converted': 10.0},
-          };
+          _processExchangeRates(data);
         } else {
           _errorMessage = data['error-type'] ?? 'Erro na API';
           _setDefaultRates();
@@ -114,6 +71,52 @@ class CurrencyProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void _processExchangeRates(Map<String, dynamic> data) {
+    final usdRates = data['conversion_rates'];
+    final brlRate = usdRates['BRL'];
+
+    _exchangeRates = {
+      'USD': {'rate': 1 / brlRate, 'converted': 10 / brlRate},
+      'EUR': {
+        'rate': usdRates['EUR'] / brlRate,
+        'converted': 10 * usdRates['EUR'] / brlRate
+      },
+      'GBP': {
+        'rate': usdRates['GBP'] / brlRate,
+        'converted': 10 * usdRates['GBP'] / brlRate
+      },
+      'JPY': {
+        'rate': usdRates['JPY'] / brlRate,
+        'converted': 10 * usdRates['JPY'] / brlRate
+      },
+      'CAD': {
+        'rate': usdRates['CAD'] / brlRate,
+        'converted': 10 * usdRates['CAD'] / brlRate
+      },
+      'AUD': {
+        'rate': usdRates['AUD'] / brlRate,
+        'converted': 10 * usdRates['AUD'] / brlRate
+      },
+      'CHF': {
+        'rate': usdRates['CHF'] / brlRate,
+        'converted': 10 * usdRates['CHF'] / brlRate
+      },
+      'CNY': {
+        'rate': usdRates['CNY'] / brlRate,
+        'converted': 10 * usdRates['CNY'] / brlRate
+      },
+      'ARS': {
+        'rate': usdRates['ARS'] / brlRate,
+        'converted': 10 * usdRates['ARS'] / brlRate
+      },
+      'MXN': {
+        'rate': usdRates['MXN'] / brlRate,
+        'converted': 10 * usdRates['MXN'] / brlRate
+      },
+      'BRL': {'rate': 1.0, 'converted': 10.0},
+    };
   }
 
   void _setDefaultRates() {
@@ -154,5 +157,13 @@ class CurrencyProvider with ChangeNotifier {
 
     return (amount * _exchangeRates[fromCurrency]!['rate']!) /
         _exchangeRates[toCurrency]!['rate']!;
+  }
+
+  void clearCurrencyData() {
+    _currency = 'BRL';
+    _exchangeRates = {};
+    _isLoading = false;
+    _errorMessage = '';
+    notifyListeners();
   }
 }
