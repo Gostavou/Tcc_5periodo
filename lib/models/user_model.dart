@@ -5,12 +5,14 @@ class UserData {
   final String email;
   final String photoUrl;
   final DateTime lastLogin;
+  final double initialBalance;
 
   UserData({
     required this.name,
     required this.email,
     required this.photoUrl,
     required this.lastLogin,
+    required this.initialBalance,
   });
 
   factory UserData.fromMap(Map<String, dynamic> map) {
@@ -19,6 +21,7 @@ class UserData {
       email: map['email'] ?? '',
       photoUrl: map['photoUrl'] ?? '',
       lastLogin: (map['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      initialBalance: (map['initialBalance'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

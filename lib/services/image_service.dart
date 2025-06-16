@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 import 'dart:io';
 import 'dart:async';
-
 import 'dart:html' as html;
+//ainda precisa arrumar as imagens, que devido a necessidade de um plano no firebase deixei de lado por enquanto
 
 class ImageService {
   Future<dynamic> pickImage() async {

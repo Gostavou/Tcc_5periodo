@@ -254,17 +254,31 @@ class _AddGoalScreenState extends State<AddGoalScreen> {
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      Provider.of<GoalProvider>(context, listen: false).addGoal(
-                        Goal(
-                          name: _nameController.text,
-                          imagePath: _image?.path,
-                          targetAmount: double.parse(_targetController.text),
-                          deadline: _selectedDate,
-                        ),
+                      final newGoal = GoalModel(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: _nameController.text,
+                        imagePath: _image?.path,
+                        targetAmount: double.parse(_targetController.text),
+                        deadline: _selectedDate,
+                        currentAmount: 0,
+                        isCompleted: false,
+                        contributions: [],
+                        createdAt: DateTime.now(),
                       );
-                      Navigator.pop(context);
+
+                      try {
+                        await Provider.of<GoalProvider>(context, listen: false)
+                            .addGoal(newGoal);
+                        if (mounted) Navigator.pop(context);
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Erro ao criar meta: $e')),
+                          );
+                        }
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(

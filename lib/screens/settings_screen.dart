@@ -15,25 +15,49 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
   File? _image;
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _image = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao selecionar imagem: ${e.toString()}')),
+      );
     }
+  }
+
+  ImageProvider? _getProfileImage(UserProvider userProvider) {
+    if (_image != null) {
+      return FileImage(_image!);
+    } else if (userProvider.photoUrl.isNotEmpty) {
+      return NetworkImage(userProvider.photoUrl);
+    }
+    return null;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final currencyProvider = Provider.of<CurrencyProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -57,14 +81,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: _pickImage,
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundImage: _image != null
-                          ? FileImage(_image!)
-                          : (userProvider.photoUrl.isNotEmpty
-                                  ? NetworkImage(userProvider.photoUrl)
-                                  : const AssetImage('assets/profile.png'))
-                              as ImageProvider<Object>?,
+                      backgroundColor: Colors.grey[200],
+                      backgroundImage: _getProfileImage(userProvider),
                       child: _image == null && userProvider.photoUrl.isEmpty
-                          ? const Icon(Icons.camera_alt, size: 50)
+                          ? const Icon(Icons.camera_alt,
+                              size: 30, color: Colors.grey)
                           : null,
                     ),
                   ),
@@ -78,33 +99,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _emailController..text = userProvider.email,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
                       userProvider.updateProfile(
                         _nameController.text,
-                        _emailController.text,
+                        userProvider.email,
                         _image != null ? _image!.path : userProvider.photoUrl,
                       );
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -131,29 +131,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  ListTile(
-                    leading: const Icon(Icons.palette),
-                    title: const Text('Tema do Aplicativo'),
-                    subtitle:
-                        Text(themeProvider.isDarkMode ? 'Escuro' : 'Claro'),
-                    trailing: Switch(
-                      value: themeProvider.isDarkMode,
-                      onChanged: (value) {
-                        themeProvider.toggleTheme(value);
-                      },
-                    ),
-                    onTap: () {
-                      themeProvider.toggleTheme(!themeProvider.isDarkMode);
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.language),
-                    title: const Text('Idioma'),
-                    subtitle: const Text('Português (Brasil)'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
-                  ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.currency_exchange),
@@ -207,59 +184,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Notificações',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: const Text('Notificações Gerais'),
-                    subtitle:
-                        const Text('Ativar/desativar todas as notificações'),
-                    value: true,
-                    onChanged: (value) {},
-                  ),
-                  const Divider(),
-                  SwitchListTile(
-                    title: const Text('Lembretes de Metas'),
-                    subtitle:
-                        const Text('Notificações sobre o progresso das metas'),
-                    value: true,
-                    onChanged: (value) {},
-                  ),
-                  const Divider(),
-                  SwitchListTile(
-                    title: const Text('Alertas de Gastos'),
-                    subtitle: const Text(
-                        'Notificações quando seus gastos forem altos'),
-                    value: true,
-                    onChanged: (value) {},
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
                     'Segurança',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    leading: const Icon(Icons.fingerprint),
-                    title: const Text('Biometria'),
-                    subtitle: const Text(
-                        'Usar impressão digital ou reconhecimento facial'),
-                    trailing: Switch(
-                      value: false,
-                      onChanged: (value) {},
-                    ),
                   ),
                   const Divider(),
                   ListTile(
@@ -368,7 +294,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Provider.of<UserProvider>(context, listen: false).clearUser();
+              Navigator.pushReplacementNamed(context, '/login');
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               minimumSize: const Size(double.infinity, 50),

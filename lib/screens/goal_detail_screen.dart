@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:projeto_financeiro/models/goal_model.dart';
 import 'package:projeto_financeiro/providers/goal_provider.dart';
 import 'package:projeto_financeiro/providers/user_provider.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 
 class GoalDetailScreen extends StatefulWidget {
-  final Goal goal;
+  final GoalModel goal;
 
   const GoalDetailScreen({super.key, required this.goal});
 
@@ -69,31 +70,227 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     );
   }
 
+  Widget _buildDeadlineCard(DateTime deadline, ThemeData theme) {
+    final remaining = deadline.difference(DateTime.now());
+    final days = remaining.inDays;
+    final hours = remaining.inHours.remainder(24);
+    final isExpired = remaining.isNegative;
+    final colors = theme.colorScheme;
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color:
+                    isExpired ? colors.errorContainer : colors.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isExpired ? Icons.timer_off : Icons.timer,
+                color: isExpired
+                    ? colors.onErrorContainer
+                    : colors.onPrimaryContainer,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Prazo da Meta',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: colors.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        DateFormat('dd/MM/yyyy').format(deadline),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        isExpired
+                            ? 'Expirado'
+                            : 'Faltam $days dias e $hours horas',
+                        style: TextStyle(
+                          color: isExpired ? colors.error : colors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContributionHistory(GoalModel goal, ThemeData theme) {
+    if (goal.contributions.isEmpty) return const SizedBox();
+
+    final colors = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Histórico de Contribuições',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                ...goal.contributions.map((contrib) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Material(
+                      color: colors.surfaceVariant.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Dismissible(
+                        key: Key(contrib.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          decoration: BoxDecoration(
+                            color: colors.error,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        confirmDismiss: (direction) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Remover Contribuição?'),
+                              content: Text(
+                                'Deseja remover a contribuição de R\$${contrib.amount.toStringAsFixed(2)}?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: const Text('Cancelar'),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  child: Text(
+                                    'Remover',
+                                    style: TextStyle(color: colors.error),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (direction) =>
+                            _removeContribution(contrib.id),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: contrib.includedInCharts
+                                  ? colors.primaryContainer
+                                  : colors.surfaceVariant,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.attach_money,
+                              color: contrib.includedInCharts
+                                  ? colors.primary
+                                  : colors.onSurfaceVariant,
+                            ),
+                          ),
+                          title: Text(
+                            'R\$${contrib.amount.toStringAsFixed(2)}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(
+                            DateFormat('dd/MM/yyyy - HH:mm')
+                                .format(contrib.date),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          trailing: Icon(
+                            contrib.includedInCharts
+                                ? Icons.bar_chart
+                                : Icons.visibility_off,
+                            color: contrib.includedInCharts
+                                ? colors.primary
+                                : colors.onSurface.withOpacity(0.5),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final userProvider = Provider.of<UserProvider>(context);
 
-    return Scaffold(
-      drawer: _buildDrawer(context, userProvider),
-      body: Consumer<GoalProvider>(
-        builder: (context, goalProvider, child) {
-          final allGoals = [
-            ...goalProvider.activeGoals,
-            ...goalProvider.completedGoals
-          ];
-          final goal = allGoals.firstWhere(
-            (g) => g.id == widget.goal.id,
-            orElse: () => widget.goal,
-          );
+    return Consumer<GoalProvider>(
+      builder: (context, goalProvider, child) {
+        final allGoals = [
+          ...goalProvider.activeGoals,
+          ...goalProvider.completedGoals
+        ];
+        final goal = allGoals.firstWhere(
+          (g) => g.id == widget.goal.id,
+          orElse: () => widget.goal,
+        );
 
-          final progressPercentage =
-              (goal.currentAmount / goal.targetAmount * 100).clamp(0.0, 100.0);
-          final isCompleted = progressPercentage >= 100;
-          final remainingAmount = goal.targetAmount - goal.currentAmount;
+        final progressPercentage =
+            (goal.currentAmount / goal.targetAmount * 100).clamp(0.0, 100.0);
+        final isCompleted = progressPercentage >= 100;
+        final remainingAmount = goal.targetAmount - goal.currentAmount;
 
-          return Stack(
+        return Scaffold(
+          body: Stack(
             children: [
               SingleChildScrollView(
                 child: Column(
@@ -336,21 +533,24 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            TextField(
-                              controller: _amountController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Valor da contribuição',
-                                prefixText: 'R\$ ',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                            Material(
+                              borderRadius: BorderRadius.circular(12),
+                              child: TextField(
+                                controller: _amountController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Valor da contribuição',
+                                  prefixText: 'R\$ ',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      colors.surfaceVariant.withOpacity(0.3),
                                 ),
-                                filled: true,
-                                fillColor:
-                                    colors.surfaceVariant.withOpacity(0.3),
+                                style: theme.textTheme.titleMedium,
+                                onSubmitted: (_) => _addContribution(),
                               ),
-                              style: theme.textTheme.titleMedium,
-                              onSubmitted: (_) => _addContribution(),
                             ),
                             const SizedBox(height: 16),
                             SwitchListTile(
@@ -458,301 +658,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                   ),
                 ),
             ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDrawer(BuildContext context, UserProvider userProvider) {
-    return Drawer(
-      width: MediaQuery.of(context).size.width * 0.75,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue[800]!, Colors.blue[600]!],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              spreadRadius: 2,
-            )
-          ],
-        ),
-        child: Column(
-          children: [
-            UserAccountsDrawerHeader(
-              margin: EdgeInsets.zero,
-              decoration: const BoxDecoration(
-                color: Colors.transparent,
-              ),
-              accountName: Text(userProvider.name,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
-              accountEmail: Text(userProvider.email,
-                  style: TextStyle(color: Colors.white.withOpacity(0.8))),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                backgroundImage: userProvider.photoUrl.isNotEmpty
-                    ? NetworkImage(userProvider.photoUrl)
-                    : const AssetImage('assets/profile.png') as ImageProvider,
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _buildDrawerItem(context, Icons.home, 'Início', '/dashboard'),
-                  _buildDrawerItem(context, Icons.flag, 'Metas', '/goals'),
-                  _buildDrawerItem(context, Icons.currency_exchange, 'Cotações',
-                      '/currency'),
-                  _buildDrawerItem(
-                      context, Icons.history, 'Histórico', '/history'),
-                  _buildDrawerItem(
-                      context, Icons.settings, 'Configurações', '/settings'),
-                ],
-              ),
-            ),
-            const Divider(color: Colors.white54, thickness: 1),
-            _buildDrawerItem(context, Icons.logout, 'Sair', '/login',
-                isLogout: true),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-      BuildContext context, IconData icon, String title, String routeName,
-      {bool isLogout = false}) {
-    return ListTile(
-      leading: Icon(icon,
-          color: isLogout ? Colors.red[200] : Colors.white.withOpacity(0.9)),
-      title: Text(title,
-          style: TextStyle(
-              color: isLogout ? Colors.red[200] : Colors.white, fontSize: 16)),
-      onTap: () {
-        Navigator.pop(context);
-        if (isLogout) {
-          Navigator.pushReplacementNamed(context, routeName);
-        } else {
-          Navigator.pushNamed(context, routeName);
-        }
+        );
       },
-      hoverColor: Colors.white.withOpacity(0.1),
-    );
-  }
-
-  Widget _buildDeadlineCard(DateTime deadline, ThemeData theme) {
-    final remaining = deadline.difference(DateTime.now());
-    final days = remaining.inDays;
-    final hours = remaining.inHours.remainder(24);
-    final isExpired = remaining.isNegative;
-    final colors = theme.colorScheme;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color:
-                    isExpired ? colors.errorContainer : colors.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isExpired ? Icons.timer_off : Icons.timer,
-                color: isExpired
-                    ? colors.onErrorContainer
-                    : colors.onPrimaryContainer,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Prazo da Meta',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: colors.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        DateFormat('dd/MM/yyyy').format(deadline),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        isExpired
-                            ? 'Expirado'
-                            : 'Faltam $days dias e $hours horas',
-                        style: TextStyle(
-                          color: isExpired ? colors.error : colors.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContributionHistory(Goal goal, ThemeData theme) {
-    if (goal.contributions.isEmpty) return const SizedBox();
-
-    final colors = theme.colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Histórico de Contribuições',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                ...goal.contributions.map((contrib) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Material(
-                      color: colors.surfaceVariant.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(12),
-                      child: Dismissible(
-                        key: Key(contrib.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          decoration: BoxDecoration(
-                            color: colors.error,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: const Icon(Icons.delete, color: Colors.white),
-                        ),
-                        confirmDismiss: (direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Remover Contribuição?'),
-                              content: Text(
-                                'Deseja remover a contribuição de R\$${contrib.amount.toStringAsFixed(2)}?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(false),
-                                  child: const Text('Cancelar'),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  child: Text(
-                                    'Remover',
-                                    style: TextStyle(color: colors.error),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        onDismissed: (direction) =>
-                            _removeContribution(contrib.id),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: contrib.includedInCharts
-                                  ? colors.primaryContainer
-                                  : colors.surfaceVariant,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.attach_money,
-                              color: contrib.includedInCharts
-                                  ? colors.primary
-                                  : colors.onSurfaceVariant,
-                            ),
-                          ),
-                          title: Text(
-                            'R\$${contrib.amount.toStringAsFixed(2)}',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(
-                            DateFormat('dd/MM/yyyy - HH:mm')
-                                .format(contrib.date),
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          trailing: Icon(
-                            contrib.includedInCharts
-                                ? Icons.bar_chart
-                                : Icons.visibility_off,
-                            color: contrib.includedInCharts
-                                ? colors.primary
-                                : colors.onSurface.withOpacity(0.5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-                if (goal.contributions.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'Nenhuma contribuição registrada ainda',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colors.onSurface.withOpacity(0.6),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

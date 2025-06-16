@@ -17,6 +17,7 @@ class CurrencyProvider with ChangeNotifier {
   String get errorMessage => _errorMessage;
 
   final List<Map<String, dynamic>> _supportedCurrencies = [
+    {'code': 'BRL', 'name': 'Real Brasileiro', 'symbol': 'R\$', 'flag': '🇧🇷'},
     {'code': 'USD', 'name': 'Dólar Americano', 'flag': '🇺🇸', 'symbol': '\$'},
     {'code': 'EUR', 'name': 'Euro', 'flag': '🇪🇺', 'symbol': '€'},
     {'code': 'GBP', 'name': 'Libra Esterlina', 'flag': '🇬🇧', 'symbol': '£'},

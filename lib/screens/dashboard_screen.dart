@@ -32,13 +32,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   };
 
   final Map<String, Color> _categoryColors = {
-    // Aqui pra baixo despesas/gastos, ainda vou aumentar a quantidade de categoria
     'Comida': Colors.green[400]!,
     'Saúde': Colors.red[400]!,
     'Lazer': Colors.blue[400]!,
     'Educação': Colors.orange[400]!,
     'Outros (Despesas)': Colors.purple[400]!,
-    // Aqui pra baixo receitas/lucro
     'Salário': Colors.blue[600]!,
     'Investimento': Colors.green[600]!,
     'Presente': Colors.purple[600]!,
@@ -70,10 +68,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _timePeriods[_selectedTimePeriod]!,
     );
 
-    final double totalExpenses = expenseProvider.getTotalExpensesByPeriod(
-        filteredTransactions.where((t) => t.type == 'expense').toList());
-    final double totalProfits = expenseProvider.getTotalProfitsByPeriod(
-        filteredTransactions.where((t) => t.type == 'profit').toList());
+    // Valores totais (não apenas do período selecionado)
+    final double totalExpenses = expenseProvider.getTotalExpenses();
+    final double totalProfits = expenseProvider.getTotalProfits();
 
     final Map<String, double> expensesByCategory =
         expenseProvider.getExpensesByCategory(filteredTransactions);
@@ -81,7 +78,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         expenseProvider.getProfitsByCategory(filteredTransactions);
     final List<TransactionModel> lastTransactions =
         expenseProvider.getLastTransactions(5);
-    final double saldoFicticio = 5000;
+
+    final balance = userProvider.initialBalance + totalProfits - totalExpenses;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -126,9 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                _buildTimePeriodSelector(),
-                const SizedBox(height: 10),
-                _buildProfileCard(userProvider, currencyProvider, saldoFicticio,
+                _buildProfileCard(userProvider, currencyProvider, balance,
                     totalProfits, totalExpenses),
                 const SizedBox(height: 20),
                 _buildFinancialAnalysisSection(
@@ -228,6 +224,228 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildProfileCard(
+    UserProvider userProvider,
+    CurrencyProvider currencyProvider,
+    double balance,
+    double totalProfits,
+    double totalExpenses,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          colors: balance >= 0
+              ? [Colors.green[600]!, Colors.green[400]!]
+              : [Colors.red[600]!, Colors.red[400]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: CircleAvatar(
+                backgroundColor: Colors.white,
+                backgroundImage: userProvider.photoUrl.isNotEmpty
+                    ? NetworkImage(userProvider.photoUrl)
+                    : null,
+                child: userProvider.photoUrl.isEmpty
+                    ? const Icon(Icons.person, size: 30, color: Colors.blue)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bem-vindo, ${userProvider.name}!',
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Saldo Atual',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                  Text(
+                    currencyProvider.formatCurrency(
+                        balance, currencyProvider.currency),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              children: [
+                _buildMiniInfoCard(
+                  'Receitas',
+                  totalProfits,
+                  currencyProvider,
+                  Colors.green[100]!,
+                  Colors.green[800]!,
+                ),
+                const SizedBox(height: 8),
+                _buildMiniInfoCard(
+                  'Despesas',
+                  totalExpenses,
+                  currencyProvider,
+                  Colors.red[100]!,
+                  Colors.red[800]!,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniInfoCard(String title, double value,
+      CurrencyProvider currencyProvider, Color bgColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: textColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            currencyProvider.formatCurrency(value, currencyProvider.currency),
+            style: TextStyle(
+              fontSize: 12,
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinancialAnalysisSection(
+    CurrencyProvider currencyProvider,
+    Map<String, double> expensesByCategory,
+    Map<String, double> profitsByCategory,
+  ) {
+    final data = _selectedChartType == 'Despesas'
+        ? _mapCategories(expensesByCategory)
+        : _mapCategories(profitsByCategory);
+
+    final filteredData = Map.fromEntries(data.entries.where(
+      (entry) => !_selectedCategories.contains(entry.key),
+    ));
+
+    final total = filteredData.values.fold(0.0, (sum, value) => sum + value);
+
+    return Column(
+      children: [
+        Card(
+          elevation: 4,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Análise Financeira',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[800],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: DropdownButton<String>(
+                        value: _selectedChartType,
+                        icon: Icon(Icons.arrow_drop_down,
+                            color: Colors.blue[800]),
+                        elevation: 0,
+                        style: TextStyle(
+                            color: Colors.blue[800],
+                            fontWeight: FontWeight.w500),
+                        underline: Container(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedChartType = newValue!;
+                            _selectedCategories = {};
+                          });
+                        },
+                        items: ['Despesas', 'Receitas']
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _buildTimePeriodSelector(),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 300,
+                  child: _selectedChartType == 'Despesas'
+                      ? _buildExpensesChart(
+                          currencyProvider, filteredData, total)
+                      : _buildProfitsChart(
+                          currencyProvider, filteredData, total),
+                ),
+                const SizedBox(height: 16),
+                _buildCategoryList(data, currencyProvider),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTimePeriodSelector() {
     return Card(
       elevation: 2,
@@ -318,237 +536,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       return _selectedDate.year.toString();
     }
-  }
-
-  Widget _buildProfileCard(
-    UserProvider userProvider,
-    CurrencyProvider currencyProvider,
-    double saldoFicticio,
-    double totalProfits,
-    double totalExpenses,
-  ) {
-    final balance = saldoFicticio + totalProfits - totalExpenses;
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        gradient: LinearGradient(
-          colors: balance >= 0
-              ? [Colors.green[600]!, Colors.green[400]!]
-              : [Colors.red[600]!, Colors.red[400]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                backgroundImage: userProvider.photoUrl.isNotEmpty
-                    ? NetworkImage(userProvider.photoUrl)
-                    : null,
-                child: userProvider.photoUrl.isEmpty
-                    ? const Icon(Icons.person, size: 30, color: Colors.blue)
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bem-vindo, ${userProvider.name}!',
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Saldo Atual',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                  Text(
-                    currencyProvider.formatCurrency(
-                        balance, currencyProvider.currency),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Período: $_selectedTimePeriod',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              children: [
-                _buildMiniInfoCard(
-                  'Receitas',
-                  totalProfits,
-                  currencyProvider,
-                  Colors.green[100]!,
-                  Colors.green[800]!,
-                ),
-                const SizedBox(height: 8),
-                _buildMiniInfoCard(
-                  'Despesas',
-                  totalExpenses,
-                  currencyProvider,
-                  Colors.red[100]!,
-                  Colors.red[800]!,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMiniInfoCard(String title, double value,
-      CurrencyProvider currencyProvider, Color bgColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: textColor,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          Text(
-            currencyProvider.formatCurrency(value, currencyProvider.currency),
-            style: TextStyle(
-              fontSize: 12,
-              color: textColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFinancialAnalysisSection(
-    CurrencyProvider currencyProvider,
-    Map<String, double> expensesByCategory,
-    Map<String, double> profitsByCategory,
-  ) {
-    final data = _selectedChartType == 'Despesas'
-        ? _mapCategories(expensesByCategory)
-        : _mapCategories(profitsByCategory);
-
-    final filteredData = Map.fromEntries(data.entries.where(
-      (entry) => !_selectedCategories.contains(entry.key),
-    ));
-
-    final total = filteredData.values.fold(0.0, (sum, value) => sum + value);
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Análise Financeira',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[800],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: DropdownButton<String>(
-                  value: _selectedChartType,
-                  icon: Icon(Icons.arrow_drop_down, color: Colors.blue[800]),
-                  elevation: 0,
-                  style: TextStyle(
-                      color: Colors.blue[800], fontWeight: FontWeight.w500),
-                  underline: Container(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedChartType = newValue!;
-                      _selectedCategories = {};
-                    });
-                  },
-                  items: ['Despesas', 'Receitas']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 15),
-        Card(
-          elevation: 4,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 300,
-                  child: _selectedChartType == 'Despesas'
-                      ? _buildExpensesChart(
-                          currencyProvider, filteredData, total)
-                      : _buildProfitsChart(
-                          currencyProvider, filteredData, total),
-                ),
-                const SizedBox(height: 16),
-                _buildCategoryList(data, currencyProvider),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildExpensesChart(

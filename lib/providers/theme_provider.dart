@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-//Ainda falta arrumar certinho a parte do tema escuro
+//Ainda falta arrumar a parte do tema escuro, vai ser uma das ultimas coisas
 class ThemeProvider with ChangeNotifier {
   bool _isDarkMode = false;
 

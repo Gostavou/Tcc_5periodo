@@ -63,7 +63,17 @@ void main() async {
             },
           ),
           ChangeNotifierProvider(create: (_) => CurrencyProvider()),
-          ChangeNotifierProvider(create: (_) => GoalProvider()),
+          ChangeNotifierProxyProvider<DatabaseService, GoalProvider>(
+            create: (context) => GoalProvider(
+              databaseService:
+                  Provider.of<DatabaseService>(context, listen: false),
+            ),
+            update: (context, databaseService, goalProvider) {
+              goalProvider?.updateDatabaseService(databaseService);
+              return goalProvider ??
+                  GoalProvider(databaseService: databaseService);
+            },
+          ),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ],
         child: const MyApp(),
@@ -91,6 +101,12 @@ class MyApp extends StatelessWidget {
 
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
+        if (authProvider.currentUser != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Provider.of<GoalProvider>(context, listen: false).loadGoals();
+          });
+        }
+
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Controle Financeiro',
@@ -140,11 +156,12 @@ class MyApp extends StatelessWidget {
             '/goals': (context) => const GoalsScreen(),
             '/add_goal': (context) => const AddGoalScreen(),
             '/goal_detail': (context) {
-              final goal = ModalRoute.of(context)!.settings.arguments as Goal;
+              final goal =
+                  ModalRoute.of(context)!.settings.arguments as GoalModel;
               return GoalDetailScreen(goal: goal);
             },
             '/interest_calculator': (context) =>
-                const InterestCalculatorScreen(), // Nova rota adicionada
+                const InterestCalculatorScreen(),
           },
         );
       },

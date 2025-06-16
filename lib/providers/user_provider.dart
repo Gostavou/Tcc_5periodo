@@ -13,6 +13,7 @@ class UserProvider with ChangeNotifier {
   String get name => _userData?.name ?? 'Usuário';
   String get email => _userData?.email ?? '';
   String get photoUrl => _userData?.photoUrl ?? '';
+  double get initialBalance => _userData?.initialBalance ?? 0.0;
   String get localPhotoPath => _localPhotoPath;
 
   void updateDatabaseService(DatabaseService databaseService) {
@@ -31,6 +32,7 @@ class UserProvider with ChangeNotifier {
         email: '',
         photoUrl: '',
         lastLogin: DateTime.now(),
+        initialBalance: 0.0,
       );
       notifyListeners();
     }
@@ -42,15 +44,23 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateProfile(String name, String email, String photoUrl,
-      {String localPhotoPath = ''}) async {
+  Future<void> updateProfile(
+    String name,
+    String email,
+    String photoUrl, {
+    String localPhotoPath = '',
+  }) async {
     try {
+      double currentBalance = _userData?.initialBalance ?? 0.0;
+
       _userData = UserData(
         name: name,
         email: email,
         photoUrl: photoUrl,
         lastLogin: DateTime.now(),
+        initialBalance: currentBalance,
       );
+
       if (localPhotoPath.isNotEmpty) {
         _localPhotoPath = localPhotoPath;
       }
@@ -59,6 +69,7 @@ class UserProvider with ChangeNotifier {
         name: name,
         email: email,
         photoUrl: photoUrl,
+        initialBalance: currentBalance,
       );
 
       notifyListeners();
@@ -73,7 +84,6 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Aqui pra limpar os dados do usuario quando desloga, porque ta dando um erro que toda vez que loga tem que recarregar a pagina pra aparecer
   void clearUser() {
     _userData = null;
     _localPhotoPath = '';

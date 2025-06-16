@@ -9,17 +9,20 @@ class GoalModel {
   final DateTime? deadline;
   final bool isCompleted;
   final List<GoalContribution> contributions;
+  final DateTime createdAt;
 
   GoalModel({
     required this.id,
     required this.name,
     this.imagePath,
     required this.targetAmount,
-    required this.currentAmount,
+    this.currentAmount = 0,
     this.deadline,
-    required this.isCompleted,
-    required this.contributions,
-  });
+    this.isCompleted = false,
+    List<GoalContribution>? contributions,
+    DateTime? createdAt,
+  })  : contributions = contributions ?? [],
+        createdAt = createdAt ?? DateTime.now();
 
   factory GoalModel.fromMap(Map<String, dynamic> map) {
     return GoalModel(
@@ -36,6 +39,7 @@ class GoalModel {
               ?.map((e) => GoalContribution.fromMap(e))
               .toList() ??
           [],
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
     );
   }
 
@@ -49,8 +53,35 @@ class GoalModel {
       'deadline': deadline != null ? Timestamp.fromDate(deadline!) : null,
       'isCompleted': isCompleted,
       'contributions': contributions.map((e) => e.toMap()).toList(),
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
+
+  GoalModel copyWith({
+    String? id,
+    String? name,
+    String? imagePath,
+    double? targetAmount,
+    double? currentAmount,
+    DateTime? deadline,
+    bool? isCompleted,
+    List<GoalContribution>? contributions,
+    DateTime? createdAt,
+  }) {
+    return GoalModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      imagePath: imagePath ?? this.imagePath,
+      targetAmount: targetAmount ?? this.targetAmount,
+      currentAmount: currentAmount ?? this.currentAmount,
+      deadline: deadline ?? this.deadline,
+      isCompleted: isCompleted ?? this.isCompleted,
+      contributions: contributions ?? this.contributions,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  double get progressPercentage => (currentAmount / targetAmount) * 100;
 }
 
 class GoalContribution {

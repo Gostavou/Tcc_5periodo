@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:projeto_financeiro/models/goal_model.dart';
 import 'package:projeto_financeiro/providers/goal_provider.dart';
 import 'package:projeto_financeiro/providers/user_provider.dart';
 import 'package:projeto_financeiro/screens/add_goal_screen.dart';
@@ -56,7 +57,7 @@ class GoalsScreen extends StatelessWidget {
   }
 
   Widget _buildGoalSection(
-      String title, List<Goal> goals, BuildContext context) {
+      String title, List<GoalModel> goals, BuildContext context) {
     if (goals.isEmpty) return const SizedBox();
 
     final theme = Theme.of(context);

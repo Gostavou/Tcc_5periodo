@@ -14,6 +14,7 @@ class DatabaseService {
     required String name,
     required String email,
     String photoUrl = '',
+    double initialBalance = 0.0,
   }) async {
     if (uid == null) return;
 
@@ -21,6 +22,7 @@ class DatabaseService {
       'name': name,
       'email': email,
       'photoUrl': photoUrl,
+      'initialBalance': initialBalance,
       'lastLogin': FieldValue.serverTimestamp(),
     });
   }
@@ -38,6 +40,7 @@ class DatabaseService {
           photoUrl: data['photoUrl'] ?? '',
           lastLogin:
               (data['lastLogin'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          initialBalance: (data['initialBalance'] as num?)?.toDouble() ?? 0.0,
         );
       }
       return null;
@@ -90,9 +93,21 @@ class DatabaseService {
         .collection('users')
         .doc(uid)
         .collection('goals')
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => GoalModel.fromMap(doc.data())).toList());
+  }
+
+  Future<void> updateGoal(GoalModel goal) async {
+    if (uid == null) return;
+
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('goals')
+        .doc(goal.id)
+        .update(goal.toMap());
   }
 
   Future<void> deleteTransaction(String transactionId) async {

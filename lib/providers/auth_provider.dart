@@ -28,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
         'name': '',
         'photoUrl': '',
         'currency': '',
+        'initialBalance': 0.0,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -74,13 +75,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Login com o google, mas ainda nao configurei pra conseguir logar
   Future<String?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
         return 'Login cancelado';
       }
+
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
@@ -99,6 +100,7 @@ class AuthProvider extends ChangeNotifier {
           'name': user.displayName ?? '',
           'photoUrl': user.photoURL ?? '',
           'currency': '',
+          'initialBalance': 0.0,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
@@ -115,6 +117,7 @@ class AuthProvider extends ChangeNotifier {
     required String name,
     String? photoUrl,
     required String currency,
+    required double initialBalance,
   }) async {
     try {
       if (name.isEmpty) {
@@ -128,6 +131,7 @@ class AuthProvider extends ChangeNotifier {
         'name': name,
         'photoUrl': photoUrl ?? '',
         'currency': currency,
+        'initialBalance': initialBalance,
       });
 
       notifyListeners();

@@ -311,9 +311,14 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               color: theme.colorScheme.onSurface.withOpacity(0.8),
               size: 28,
             ),
-            items: [
-              DropdownMenuItem<String>(
-                value: 'BRL',
+            items: provider.supportedCurrencies
+                .map<DropdownMenuItem<String>>((currency) {
+              final String code = currency['code'] as String;
+              final String name = currency['name'] as String;
+              final String flag = currency['flag'] as String;
+
+              return DropdownMenuItem<String>(
+                value: code,
                 child: Row(
                   children: [
                     Container(
@@ -324,47 +329,20 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                         color: theme.colorScheme.primary.withOpacity(0.1),
                       ),
                       alignment: Alignment.center,
-                      child: const Text('🇧🇷', style: TextStyle(fontSize: 20)),
+                      child: Text(flag, style: const TextStyle(fontSize: 20)),
                     ),
                     const SizedBox(width: 12),
-                    Text(isSmallScreen ? 'BRL' : 'Real Brasileiro',
-                        style: theme.textTheme.bodyMedium),
+                    Flexible(
+                      child: Text(
+                        isSmallScreen ? code : name,
+                        style: theme.textTheme.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              ...provider.supportedCurrencies
-                  .map<DropdownMenuItem<String>>((currency) {
-                final String code = currency['code'] as String;
-                final String name = currency['name'] as String;
-                final String flag = currency['flag'] as String;
-
-                return DropdownMenuItem<String>(
-                  value: code,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(flag, style: const TextStyle(fontSize: 20)),
-                      ),
-                      const SizedBox(width: 12),
-                      Flexible(
-                        child: Text(
-                          isSmallScreen ? code : name,
-                          style: theme.textTheme.bodyMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ],
+              );
+            }).toList(),
             onChanged: onChanged,
             decoration: InputDecoration(
               border: OutlineInputBorder(
